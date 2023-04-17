@@ -47,3 +47,14 @@ export const genericErrorHandler: ErrorRequestHandler = (
   console.log(err);
   res.status(500).send({ message: "We gonna fix this ASAP!" });
 };
+
+
+
+export const validationErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
+  if (err.status === 422) {
+    res.status(422).send({ message: err.message });
+  } else {
+    next(err);
+  }
+};
+
