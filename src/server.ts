@@ -9,7 +9,7 @@ import {
   notFoundHandler,
   unauthorizedHandler,
 } from "./errorHandlers";
-import messagesRouter from "./messages/index";
+import messagesRouter from "./api/messages/index";
 
 const server = Express();
 
