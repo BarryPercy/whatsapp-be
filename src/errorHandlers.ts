@@ -49,6 +49,7 @@ export const genericErrorHandler: ErrorRequestHandler = (
 };
 
 
+
 export const validationErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
   if (err.status === 422) {
     res.status(422).send({ message: err.message });
@@ -56,3 +57,4 @@ export const validationErrorHandler: ErrorRequestHandler = (err, req, res, next)
     next(err);
   }
 };
+
