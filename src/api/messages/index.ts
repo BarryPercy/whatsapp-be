@@ -4,6 +4,7 @@ import ChatsSchema from "./chatModel";
 import { JWTAuthMiddleware } from "../../lib/auth/jwt";
 import { TokenPayload } from "../../lib/auth/tools";
 import UserModel from "../users/model";
+import MessagesSchema from "./model";
 
 interface CustomRequest extends Request {
   user?: TokenPayload;
@@ -57,8 +58,10 @@ chatsRouter.post("/", JWTAuthMiddleware, async (req, res, next) => {
       ],
     });
     if (existingChat) {
-      const chats = await ChatsSchema.find({ chatId: existingChat._id });
-      return res.status(200).send({ chatId: existingChat._id, chats });
+      const messages = await ChatsSchema.find({ chatId: existingChat._id });
+      return res
+        .status(200)
+        .send({ chatId: existingChat._id, messages: existingChat.messages });
     } else {
       const newChat = new ChatsSchema({ members });
       const { _id } = await newChat.save();
@@ -89,10 +92,10 @@ chatsRouter.get("/:id", JWTAuthMiddleware, async (req, res, next) => {
       },
     });
     if (chat) {
-      const messages = await ChatsSchema.find({
-        chat: req.params.id.toString(),
+      const messages = await MessagesSchema.find({
+        _id: chat._id,
       });
-      res.send(messages);
+      res.send("+" + messages);
     } else {
       next(createHttpError(404, "Chat does not exist or unauthorized."));
     }
