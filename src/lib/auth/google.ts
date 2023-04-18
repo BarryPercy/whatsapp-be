@@ -1,24 +1,24 @@
 import {Strategy as GoogleStrategy} from "passport-google-oauth20";
-import { createAccessToken } from "./tools.js";
-import UserModel from "../../users/model.js";
+import { createAccessToken } from "./tools";
+import UserModel from "../../users/model";
 
 const googleStrategy = new GoogleStrategy(
   {
     clientID: process.env.GOOGLE_ID!,
     clientSecret: process.env.GOOGLE_SECRET!,
-    callbackURL: `${process.env.API_URL}/authors/auth/google/callback`,
+    callbackURL: `${process.env.API_URL}/users/auth/google/callback`,
   },
   async (_, __, profile, passportNext) => {
     // This function is executed when Google sends us a successfull response
     // Here we are going to receive some informations about the user from Google (scopes --> profile, email)
     try {
-      const { email, given_name, family_name, sub } = profile._json;
+      const { given_name, email } = profile._json;
       console.log("PROFILE:", profile);
       // 1. Check if the user is already in db
       const user = await UserModel.findOne({ email });
       if (user) {
         // 2. If he is there --> generate an accessToken (optionally also a refreshToken)
-        const accessToken = createAccessToken({
+        const accessToken = await createAccessToken({
           _id: user._id.toString(),
           role: "User"
         });
@@ -36,7 +36,7 @@ const googleStrategy = new GoogleStrategy(
         const createdUser = await newUser.save();
 
         // 3.1 Then generate an accessToken (optionally also a refreshToken)
-        const accessToken = createAccessToken({
+        const accessToken = await createAccessToken({
           _id: createdUser._id.toString(),
           role: "User",
         });
