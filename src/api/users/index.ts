@@ -52,5 +52,6 @@ userRouter.post("/session", async (req, res, next) => {
   });
   res.json({ user, token });
 });
+console.log("a");
 
 export default userRouter;
