@@ -4,9 +4,12 @@ const { Schema, model } = mongoose;
 
 const MessagesSchema = new Schema(
   {
+    _id: { type: String },
     sender: { type: String, required: true },
-    recipient: { type: String, required: true },
-    message: { type: String, required: false },
+    content: {
+      text: { type: String },
+      media: { type: String },
+    },
   },
   {
     timestamps: true,

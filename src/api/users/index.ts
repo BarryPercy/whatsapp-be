@@ -7,7 +7,6 @@ import createHttpError from "http-errors";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import { v2 as cloudinary } from "cloudinary";
 
-
 const userRouter = express.Router();
 
 userRouter.get(
@@ -57,7 +56,6 @@ userRouter.post("/session", async (req, res, next) => {
   });
   res.json({ user, token });
 });
-
 
 userRouter.get("/", async (req, res, next) => {
   try {
@@ -111,13 +109,13 @@ userRouter.put("/me", async (req, res, next) => {
 
 {
   const cloudinaryUploader = multer({
-  storage: new CloudinaryStorage({
-    cloudinary,
-    params: {
-      folder: "whatsapp/avatar",
-    } as any,
-  }),
-}).single("avatar");
+    storage: new CloudinaryStorage({
+      cloudinary,
+      params: {
+        folder: "whatsapp/avatar",
+      } as any,
+    }),
+  }).single("avatar");
 }
 
 export default userRouter;
