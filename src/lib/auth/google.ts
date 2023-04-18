@@ -1,6 +1,6 @@
-import {Strategy as GoogleStrategy} from "passport-google-oauth20";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { createAccessToken } from "./tools";
-import UserModel from "../../users/model";
+import UserModel from "../../api/users/model";
 
 const googleStrategy = new GoogleStrategy(
   {
@@ -20,7 +20,7 @@ const googleStrategy = new GoogleStrategy(
         // 2. If he is there --> generate an accessToken (optionally also a refreshToken)
         const accessToken = await createAccessToken({
           _id: user._id.toString(),
-          role: "User"
+          role: "User",
         });
 
         // 2.1 Then we can go next (to /googleRedirect route handler function)
@@ -30,7 +30,6 @@ const googleStrategy = new GoogleStrategy(
         const newUser = new UserModel({
           name: given_name,
           email,
-         
         });
 
         const createdUser = await newUser.save();
