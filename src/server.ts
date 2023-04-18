@@ -15,8 +15,6 @@ import {
 import userRouter from "./users";
 import passport from "passport";
 import googleStrategy from "./lib/auth/google";
-
-} from "./errorHandlers";
 import messagesRouter from "./api/messages/index";
 
 
