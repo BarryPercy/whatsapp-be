@@ -10,6 +10,7 @@ const ChatsSchema = new Schema(
         _id: { type: String },
         username: { type: String },
         email: { type: String },
+        status: { type: String },
         avatar: { type: String },
       },
     ],

@@ -10,7 +10,7 @@ import {
   unauthorizedHandler,
   validationErrorHandler,
 } from "./errorHandlers";
-import userRouter from "./users";
+import userRouter from "../src/api/users";
 import passport from "passport";
 import googleStrategy from "./lib/auth/google";
 import chatsRouter from "./api/messages/index";

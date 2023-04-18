@@ -1,16 +1,18 @@
 import Express from "express";
 import createHttpError from "http-errors";
 import ChatsSchema from "./chatModel";
+import UserModel from "../users/model";
+import { JWTAuthMiddleware } from "../../lib/auth/jwt";
 
 const chatsRouter = Express.Router();
 
 //Get all chats that the user is a member of
-chatsRouter.get("/", async (req, res, next) => {
+chatsRouter.get("/", JWTAuthMiddleware, async (req, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    const chats = await ChatsSchema.find({ members: req.user._id });
+    const chats = await ChatsSchema.find({ members: req.body.user._id });
     res.send(chats);
   } catch (error) {
     next(error);
@@ -18,7 +20,7 @@ chatsRouter.get("/", async (req, res, next) => {
 });
 
 //Create new chat or return existing chat
-chatsRouter.post("/", async (req, res, next) => {
+chatsRouter.post("/", JWTAuthMiddleware, async (req, res, next) => {
   try {
     const { recipient } = req.body;
     if (!recipient) {
@@ -26,13 +28,13 @@ chatsRouter.post("/", async (req, res, next) => {
     }
 
     const existingChat = await ChatsSchema.findOne({
-      members: { $all: [req.user?._id, recipient] },
+      members: { $all: [req.body.user._id, recipient] },
     });
     if (existingChat) {
       return res.send(existingChat);
     }
 
-    const members = [req.user?._id, recipient];
+    const members = [req.body.user._id, recipient];
     const newChat = new ChatsSchema({ members });
     const { _id } = await newChat.save();
     res.status(201).send({ _id });
@@ -44,11 +46,11 @@ chatsRouter.post("/", async (req, res, next) => {
 });
 
 //Get message history for a specific chat
-chatsRouter.get("/:id", async (req, res, next) => {
+chatsRouter.get("/:id", JWTAuthMiddleware, async (req, res, next) => {
   try {
     const chat = await ChatsSchema.findOne({
       _id: req.params.id,
-      members: req.user?._id,
+      members: req.body.user._id,
     });
     if (chat) {
       const messages = await ChatsSchema.find({ chatId: req.params.id });
