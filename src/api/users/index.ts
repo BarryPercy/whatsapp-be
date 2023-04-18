@@ -6,8 +6,12 @@ import passport from "passport";
 import createHttpError from "http-errors";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import { v2 as cloudinary } from "cloudinary";
+import { JWTAuthMiddleware } from "../../lib/auth/jwt";
+import { TokenPayload } from "../../lib/auth/tools";
 
-
+interface CustomRequest extends Request {
+  user?: TokenPayload;
+}
 const userRouter = express.Router();
 
 userRouter.get(
@@ -54,6 +58,7 @@ userRouter.post("/session", async (req, res, next) => {
   const token = await createAccessToken({
     _id: user._id.toString(),
     role: "User",
+
   });
   res.json({ user, token });
 });
@@ -67,14 +72,14 @@ userRouter.get("/", async (req, res, next) => {
   }
 });
 
-userRouter.get("/me", async (req, res, next) => {
+userRouter.get("/me", JWTAuthMiddleware, async (req, res, next) => {
   try {
-    const user = await UserModel.findById(req.body.user._id);
+    const user = await UserModel.findById((req as CustomRequest).user!._id);
     if (user) {
       res.send(user);
     } else {
       res.send(
-        createHttpError(404, "Couldn't find user with id: ", req.body.user._id)
+        createHttpError(404, "Couldn't find user")
       );
     }
   } catch (error) {
@@ -95,10 +100,9 @@ userRouter.get("/:id", async (req, res, next) => {
   }
 });
 
-userRouter.put("/me", async (req, res, next) => {
+userRouter.put("/me", JWTAuthMiddleware, async (req, res, next) => {
   try {
-    const updatedUser = await UserModel.findByIdAndUpdate(
-      req.body.user._id,
+    const updatedUser = await UserModel.findByIdAndUpdate((req as CustomRequest).user!._id,
       req.body,
       { new: true, runValidators: true }
     );
@@ -118,5 +122,7 @@ userRouter.put("/me", async (req, res, next) => {
     }),
   }).single("avatar");
 }
+
+//userRouter.post("/me/avatar", cloudinaryUploader, async)
 
 export default userRouter;

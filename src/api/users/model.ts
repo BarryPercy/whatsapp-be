@@ -1,40 +1,44 @@
 import { Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
 const UserSchema = new Schema({
-  _id: { type: String },
-  name: { type: String, required: true },
-  email: { type: String, required: true },
-  password: { type: String, required: true },
-  avatar: { type: String, default: `<i class="bi bi-person-circle"></i>` },
-  status: { type: String },
-  role: { type: String, enum: ["User", "Admin"], default: "User" },
-});
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+    password: { type: String, required: true },
+    avatar: { type: String, default: `<i class="bi bi-person-circle"></i>` },
+    status: { type: String },
+    role: { type: String, enum: ["User", "Admin"], default: "User" },
+    accessToken: { type: String },
+  }, {timestamps: true});
+  
+UserSchema.pre("save", async function() {
+    const newUserData = this
+    if (newUserData.isModified("password")) {
+        const plainPw = newUserData.password
+        const hash = await bcrypt.hash(plainPw, 16)
+        newUserData.password = hash
+    }
+})
 
-UserSchema.pre("save", async function () {
-  const newUserData = this;
-  if (newUserData.isModified("password")) {
-    const plainPw = newUserData.password;
-    const hash = await bcrypt.hash(plainPw, 16);
-    newUserData.password = hash;
-  }
-});
+UserSchema.methods.toJSON = function() {
+    const currentUser = this.toObject()
+    delete currentUser.password
+    delete currentUser.createdAt
+    delete currentUser.updatedAt
+    delete currentUser.__v
 
-UserSchema.methods.toJSON = function () {
-  const currentUser = this.toObject();
-  delete currentUser.password;
-  delete currentUser.createdAt;
-  delete currentUser.updatedAt;
-  delete currentUser.__v;
+    return currentUser
+}
 
-  return currentUser;
-};
+UserSchema.static("checkCredentials", async function(email, plainPw) {
+    const user = await this.findOne({email})
+    if (user) {
+        const match = await bcrypt.compare(plainPw, user.password)
+        if (match) {
+            return user
+        } else {
+            return null
+        }
 
-UserSchema.static("checkCredentials", async function (email, plainPw) {
-  const user = await this.findOne({ email });
-  if (user) {
-    const match = await bcrypt.compare(plainPw, user.password);
-    if (match) {
-      return user;
     } else {
       return null;
     }
