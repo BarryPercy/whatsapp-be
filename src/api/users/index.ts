@@ -43,6 +43,9 @@ userRouter.post("/account", async (req, res) => {
   await user.save();
   const token = await createAccessToken({
     _id: user._id.toString(),
+    username: user.name,
+    email: user.email,
+    avatar: user.avatar,
     role: "User",
   });
   res.json({ user, token });
@@ -57,8 +60,10 @@ userRouter.post("/session", async (req, res, next) => {
 
   const token = await createAccessToken({
     _id: user._id.toString(),
+    username: user.name,
+    email: user.email,
+    avatar: user.avatar,
     role: "User",
-
   });
   res.json({ user, token });
 });
@@ -78,9 +83,7 @@ userRouter.get("/me", JWTAuthMiddleware, async (req, res, next) => {
     if (user) {
       res.send(user);
     } else {
-      res.send(
-        createHttpError(404, "Couldn't find user")
-      );
+      res.send(createHttpError(404, "Couldn't find user"));
     }
   } catch (error) {
     next(error);
@@ -102,7 +105,8 @@ userRouter.get("/:id", async (req, res, next) => {
 
 userRouter.put("/me", JWTAuthMiddleware, async (req, res, next) => {
   try {
-    const updatedUser = await UserModel.findByIdAndUpdate((req as CustomRequest).user!._id,
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      (req as CustomRequest).user!._id,
       req.body,
       { new: true, runValidators: true }
     );

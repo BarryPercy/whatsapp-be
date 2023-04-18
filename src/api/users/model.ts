@@ -1,6 +1,7 @@
 import { Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
-const UserSchema = new Schema({
+const UserSchema = new Schema(
+  {
     name: { type: String, required: true },
     email: { type: String, required: true },
     password: { type: String, required: true },
@@ -8,37 +9,40 @@ const UserSchema = new Schema({
     status: { type: String },
     role: { type: String, enum: ["User", "Admin"], default: "User" },
     accessToken: { type: String },
-  }, {timestamps: true});
-  
-UserSchema.pre("save", async function() {
-    const newUserData = this
-    if (newUserData.isModified("password")) {
-        const plainPw = newUserData.password
-        const hash = await bcrypt.hash(plainPw, 16)
-        newUserData.password = hash
-    }
-})
+    chats: {
+      chatId: { type: String },
+    },
+  },
+  { timestamps: true }
+);
 
-UserSchema.methods.toJSON = function() {
-    const currentUser = this.toObject()
-    delete currentUser.password
-    delete currentUser.createdAt
-    delete currentUser.updatedAt
-    delete currentUser.__v
+UserSchema.pre("save", async function () {
+  const newUserData = this;
+  if (newUserData.isModified("password")) {
+    const plainPw = newUserData.password;
+    const hash = await bcrypt.hash(plainPw, 16);
+    newUserData.password = hash;
+  }
+});
 
-    return currentUser
-}
+UserSchema.methods.toJSON = function () {
+  const currentUser = this.toObject();
+  delete currentUser.password;
+  delete currentUser.createdAt;
+  delete currentUser.updatedAt;
+  delete currentUser.__v;
 
-UserSchema.static("checkCredentials", async function(email, plainPw) {
-    const user = await this.findOne({email})
-    if (user) {
-        const match = await bcrypt.compare(plainPw, user.password)
-        if (match) {
-            return user
-        } else {
-            return null
-        }
+  return currentUser;
+};
 
+UserSchema.static("checkCredentials", async function (email, plainPW) {
+  const user = await this.findOne({ email });
+
+  if (user) {
+    const passwordMatch = await bcrypt.compare(plainPW, user.password);
+
+    if (passwordMatch) {
+      return user;
     } else {
       return null;
     }

@@ -20,6 +20,9 @@ const googleStrategy = new GoogleStrategy(
         // 2. If he is there --> generate an accessToken (optionally also a refreshToken)
         const accessToken = await createAccessToken({
           _id: user._id.toString(),
+          username: user.name,
+          email: user.email,
+          avatar: user.avatar,
           role: "User",
         });
 
@@ -36,7 +39,10 @@ const googleStrategy = new GoogleStrategy(
 
         // 3.1 Then generate an accessToken (optionally also a refreshToken)
         const accessToken = await createAccessToken({
-          _id: createdUser._id.toString(),
+          _id: user!._id.toString(),
+          username: user!.name,
+          email: user!.email,
+          avatar: user!.avatar,
           role: "User",
         });
 
