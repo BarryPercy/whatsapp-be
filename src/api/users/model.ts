@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-
+import bcrypt from "bcrypt";
 const UserSchema = new Schema({
   _id: { type: String },
   name: { type: String, required: true },
@@ -10,24 +10,6 @@ const UserSchema = new Schema({
   role: { type: String, enum: ["User", "Admin"], default: "User" },
 });
 
-const UserModel = model("User", UserSchema);
-
-export default UserModel;
-import { Schema, model } from "mongoose";
-import bcrypt from "bcrypt";
-
-const UserSchema = new Schema(
-  {
-    name: { type: String, required: true },
-    email: { type: String, required: true },
-    password: { type: String, required: true },
-    avatar: { type: String, default: `<i class="bi bi-person-circle"></i>` },
-    status: { type: String },
-  },
-  {
-    timestamps: true,
-  }
-);
 UserSchema.pre("save", async function () {
   const newUserData = this;
   if (newUserData.isModified("password")) {
