@@ -10,11 +10,13 @@ import {
   unauthorizedHandler,
   validationErrorHandler,
 } from "./errorHandlers";
+
 //import messageRouter from "./src/messages/index";
 import userRouter from "./api/users";
 import passport from "passport";
 import googleStrategy from "./lib/auth/google";
-import messagesRouter from "./api/messages/index";
+import chatsRouter from "./api/messages/index";
+
 
 const server = Express();
 
@@ -27,7 +29,8 @@ server.use(Express.json());
 server.use(passport.initialize());
 
 server.use("/users", userRouter);
-//server.use("/users", messagesRouter);
+server.use("/chats", chatsRouter);
+
 
 server.use(badRequestHandler);
 server.use(unauthorizedHandler);

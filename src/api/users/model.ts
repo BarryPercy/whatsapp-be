@@ -3,15 +3,15 @@ import bcrypt from "bcrypt"
 
 
 const UserSchema = new Schema({
-    name: {type: String, required: true},
-    email:{type: String, required: true},
-    password: {type: String, required: true},
-    avatar: {type: String, default: `<i class="bi bi-person-circle"></i>`},
-    status: {type: String}
-},
-{
-  timestamps: true,
-})
+    _id: { type: String },
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+    password: { type: String, required: true },
+    avatar: { type: String, default: `<i class="bi bi-person-circle"></i>` },
+    status: { type: String },
+    role: { type: String, enum: ["User", "Admin"], default: "User" },
+  }, {timestamps: true});
+  
 UserSchema.pre("save", async function() {
     const newUserData = this
     if (newUserData.isModified("password")) {
@@ -48,3 +48,7 @@ UserSchema.static("checkCredentials", async function(email, plainPw) {
 const UserModel = model("User", UserSchema)
 
 export default UserModel
+
+
+
+

@@ -1,72 +1,66 @@
 import Express from "express";
 import createHttpError from "http-errors";
-import MessagesSchema from "./model";
+import ChatsSchema from "./chatModel";
+import UserModel from "../users/model";
+import { JWTAuthMiddleware } from "../../lib/auth/jwt";
 
-const messagesRouter = Express.Router();
+const chatsRouter = Express.Router();
 
-//create new message
-messagesRouter.post("/messages/new", async (req, res, next) => {
+//Get all chats that the user is a member of
+chatsRouter.get("/", JWTAuthMiddleware, async (req, res, next) => {
   try {
-    const newMessage = new MessagesSchema(req.body);
-    const { _id } = await newMessage.save();
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const chats = await ChatsSchema.find({ members: req.body.user._id });
+    res.send(chats);
+  } catch (error) {
+    next(error);
+  }
+});
+
+//Create new chat or return existing chat
+chatsRouter.post("/", JWTAuthMiddleware, async (req, res, next) => {
+  try {
+    const { recipient } = req.body;
+    if (!recipient) {
+      throw createHttpError(400, "Recipient is required.");
+    }
+
+    const existingChat = await ChatsSchema.findOne({
+      members: { $all: [req.body.user._id, recipient] },
+    });
+    if (existingChat) {
+      return res.send(existingChat);
+    }
+
+    const members = [req.body.user._id, recipient];
+    const newChat = new ChatsSchema({ members });
+    const { _id } = await newChat.save();
     res.status(201).send({ _id });
-  } catch (error) {
-    next(error);
-  }
-});
-//All messages
-messagesRouter.get("/messages", async (req, res, next) => {
-  try {
-    const messages = await MessagesSchema.find();
-    res.send(messages);
+
+    //TODO: Join sockets of both users to the new room
   } catch (error) {
     next(error);
   }
 });
 
-//get specific message
-messagesRouter.get("/messages/:id", async (req, res, next) => {
+//Get message history for a specific chat
+chatsRouter.get("/:id", JWTAuthMiddleware, async (req, res, next) => {
   try {
-    const messages = await MessagesSchema.findById(req.params.id);
-    if (messages) {
+    const chat = await ChatsSchema.findOne({
+      _id: req.params.id,
+      members: req.body.user._id,
+    });
+    if (chat) {
+      const messages = await ChatsSchema.find({ chatId: req.params.id });
       res.send(messages);
     } else {
-      next(createHttpError(404, "Message does not exist!"));
+      next(createHttpError(404, "Chat does not exist or unauthorized."));
     }
   } catch (error) {
     next(error);
   }
 });
 
-messagesRouter.put("/messages/:id", async (req, res, next) => {
-  try {
-    const updatedMessage = await MessagesSchema.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-    if (updatedMessage) {
-      res.send(updatedMessage);
-    } else {
-      next(createHttpError(404, `Message does not exist!`));
-    }
-  } catch (error) {
-    next(error);
-  }
-});
-
-messagesRouter.delete("/messages/:id", async (req, res, next) => {
-  try {
-    const messageToDelete = await MessagesSchema.findByIdAndDelete(
-      req.params.id
-    );
-    if (messageToDelete) {
-      res.status(204).send();
-    } else {
-      next(createHttpError(404, `Message does not exist!`));
-    }
-  } catch (error) {
-    next(error);
-  }
-});
-export default messagesRouter;
+export default chatsRouter;
