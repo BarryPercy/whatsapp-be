@@ -1,7 +1,5 @@
 import { Schema, model } from "mongoose";
-import bcrypt from "bcrypt"
-
-
+import bcrypt from "bcrypt";
 const UserSchema = new Schema({
     name: { type: String, required: true },
     email: { type: String, required: true },
@@ -40,15 +38,15 @@ UserSchema.static("checkCredentials", async function(email, plainPw) {
         } else {
             return null
         }
+
     } else {
-        return null
+      return null;
     }
-})
+  } else {
+    return null;
+  }
+});
 
-const UserModel = model("User", UserSchema)
+const UserModel = model("User", UserSchema);
 
-export default UserModel
-
-
-
-
+export default UserModel;

@@ -63,7 +63,6 @@ userRouter.post("/session", async (req, res, next) => {
   res.json({ user, token });
 });
 
-
 userRouter.get("/", async (req, res, next) => {
   try {
     const user = await UserModel.find();
@@ -115,13 +114,13 @@ userRouter.put("/me", JWTAuthMiddleware, async (req, res, next) => {
 
 {
   const cloudinaryUploader = multer({
-  storage: new CloudinaryStorage({
-    cloudinary,
-    params: {
-      folder: "whatsapp/avatar",
-    } as any,
-  }),
-}).single("avatar");
+    storage: new CloudinaryStorage({
+      cloudinary,
+      params: {
+        folder: "whatsapp/avatar",
+      } as any,
+    }),
+  }).single("avatar");
 }
 
 //userRouter.post("/me/avatar", cloudinaryUploader, async)
