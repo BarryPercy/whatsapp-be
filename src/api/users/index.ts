@@ -28,8 +28,14 @@ userRouter.post("/account", async (req, res) => {
   }
   const user = new UserModel({ name, email, password });
   await user.save();
-
-  res.json({ user });
+  const token = await createAccessToken({
+    _id: user._id.toString(),
+    username: user.name,
+    email: user.email,
+    avatar: user.avatar,
+    role: "User",
+  });
+  res.json({ user, token });
 });
 
 userRouter.post("/session", async (req, res, next) => {
@@ -41,6 +47,9 @@ userRouter.post("/session", async (req, res, next) => {
 
   const token = await createAccessToken({
     _id: user._id.toString(),
+    username: user.name,
+    email: user.email,
+    avatar: user.avatar,
     role: "User",
   });
   res.json({ user, token });
