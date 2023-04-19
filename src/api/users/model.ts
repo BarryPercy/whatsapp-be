@@ -24,31 +24,29 @@ const UserSchema = new Schema({
     status: { type: String },
     role: { type: String, enum: ["User", "Admin"], default: "User" },
     accessToken: { type: String },
-    chats: {
-      chatId: { type: String },
-    },
-  },
-  { timestamps: true }
-);
+  }, {timestamps: true});
+  
+UserSchema.pre("save", async function() {
+    const newUserData = this
+    if (newUserData.isModified("password")) {
+        const plainPw = newUserData.password
+        const hash = await bcrypt.hash(plainPw, 16)
+        newUserData.password = hash
+    }
+})
 
-UserSchema.pre("save", async function () {
-  const newUserData = this;
-  if (newUserData.isModified("password")) {
-    const plainPw = newUserData.password;
-    const hash = await bcrypt.hash(plainPw, 16);
-    newUserData.password = hash;
-  }
-});
+UserSchema.methods.toJSON = function() {
+    const currentUser = this.toObject()
+    delete currentUser.password
+    delete currentUser.createdAt
+    delete currentUser.updatedAt
+    delete currentUser.__v
 
-UserSchema.methods.toJSON = function () {
-  const currentUser = this.toObject();
-  delete currentUser.password;
-  delete currentUser.createdAt;
-  delete currentUser.updatedAt;
-  delete currentUser.__v;
+    return currentUser
+}
 
-  return currentUser;
-};
+
+
 
 UserSchema.static("checkCredentials", async function (email, plainPW) {
     const user = await this.findOne({ email })

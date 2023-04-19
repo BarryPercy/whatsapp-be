@@ -33,19 +33,6 @@ userRouter.post("/account", async (req, res) => {
   res.json({ user });
 });
 
-userRouter.post("/account", async (req, res) => {
-  const { name, email, password } = req.body;
-  const userExists = await UserModel.findOne({ email });
-  if (userExists) {
-    return res.status(422).json("Email already exists");
-  }
-  const user = new UserModel({ name, email, password });
-  console.log(user)
-  await user.save();
-
-  res.json({ user });
-});
-
 userRouter.post("/session", async (req, res, next) => {
   const { email, password } = req.body;
   const user = await UserModel.checkCredentials( email, password )
