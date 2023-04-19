@@ -58,7 +58,6 @@ userRouter.post("/session", async (req, res, next) => {
   const token = await createAccessToken({
     _id: user._id.toString(),
     role: "User",
-
   });
   res.json({ user, token });
 });
@@ -78,9 +77,7 @@ userRouter.get("/me", JWTAuthMiddleware, async (req, res, next) => {
     if (user) {
       res.send(user);
     } else {
-      res.send(
-        createHttpError(404, "Couldn't find user")
-      );
+      res.send(createHttpError(404, "Couldn't find user"));
     }
   } catch (error) {
     next(error);
@@ -102,7 +99,8 @@ userRouter.get("/:id", async (req, res, next) => {
 
 userRouter.put("/me", JWTAuthMiddleware, async (req, res, next) => {
   try {
-    const updatedUser = await UserModel.findByIdAndUpdate((req as CustomRequest).user!._id,
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      (req as CustomRequest).user!._id,
       req.body,
       { new: true, runValidators: true }
     );
@@ -112,17 +110,42 @@ userRouter.put("/me", JWTAuthMiddleware, async (req, res, next) => {
   }
 });
 
-{
-  const cloudinaryUploader = multer({
-    storage: new CloudinaryStorage({
-      cloudinary,
-      params: {
-        folder: "whatsapp/avatar",
-      } as any,
-    }),
-  }).single("avatar");
-}
+const cloudinaryUploader = multer({
+  storage: new CloudinaryStorage({
+    cloudinary,
+    params: {
+      folder: "whatsapp/avatar",
+    } as any,
+  }),
+}).single("avatar");
 
-//userRouter.post("/me/avatar", cloudinaryUploader, async)
+userRouter.post("/me/avatar",JWTAuthMiddleware, cloudinaryUploader, async (req, res) => {
+  await UserModel.findByIdAndUpdate((req as CustomRequest).user!._id, {
+    avatar: req.file?.path,
+  });
+  res.send({ avatar: req.file?.path });
+});
+
+
+userRouter.delete("/session", JWTAuthMiddleware, async (req, res, next) => {
+  try {
+    await UserModel.findByIdAndUpdate((req as CustomRequest).user!._id, {
+      refreshToken: "",
+    });
+    res.send({ message: "Successfully logged out" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+
+{/*userRouter.post("/session/refresh", JWTAuthMiddleware, async (req, res, next) => {
+  try {
+   
+    res.send();
+  } catch (error) {
+    next(error);
+  }
+});*/}
 
 export default userRouter;
