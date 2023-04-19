@@ -20,7 +20,7 @@ import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketDa
 const expressServer = Express();
 
 const httpServer = createServer(expressServer);
-const socketServer = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(httpServer);
+const socketServer = new Server(httpServer);
 socketServer.on("connection", newConnectionHandler)
 
 passport.use("google", googleStrategy);

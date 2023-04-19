@@ -1,5 +1,21 @@
 import { Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
+import { Model, Document } from "mongoose";
+
+export interface UserDocument extends Document {
+  name: string;
+  email: string;
+  password: string;
+  avatar?: string;
+  status?: string;
+  role: 'User' | 'Admin';
+  accessToken?: string;
+}
+
+interface UserModelInterface extends Model<UserDocument> {
+  checkCredentials(email: string, plainPW: string): Promise<UserDocument | null>;
+}
+
 const UserSchema = new Schema({
     name: { type: String, required: true },
     email: { type: String, required: true },
@@ -31,16 +47,11 @@ UserSchema.methods.toJSON = function() {
 
 UserSchema.static("checkCredentials", async function (email, plainPW) {
     const user = await this.findOne({ email })
-  
     if (user) {
-    
       const passwordMatch = await bcrypt.compare(plainPW, user.password)
-  
       if (passwordMatch) {
-     
         return user
       } else {
-      
         return null
       }
     } else {
@@ -48,6 +59,6 @@ UserSchema.static("checkCredentials", async function (email, plainPW) {
       return null
     }
   })
-const UserModel = model("User", UserSchema);
+  const UserModel: UserModelInterface = model<UserDocument, UserModelInterface>("User", UserSchema);
 
 export default UserModel;
