@@ -4,7 +4,6 @@ const { Schema, model } = mongoose;
 
 const MessagesSchema = new Schema(
   {
-    _id: { type: String },
     sender: { type: String, required: true },
     content: {
       text: { type: String },

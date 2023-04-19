@@ -27,39 +27,40 @@ userRouter.post("/account", async (req, res) => {
     return res.status(422).json("Email already exists");
   }
   const user = new UserModel({ name, email, password });
+  console.log(user)
   await user.save();
-  const token = await createAccessToken({
-    _id: user._id.toString(),
-    username: user.name,
-    email: user.email,
-    avatar: user.avatar,
-    role: "User",
-  });
-  res.json({ user, token });
+
+  res.json({ user });
+});
+
+userRouter.post("/account", async (req, res) => {
+  const { name, email, password } = req.body;
+  const userExists = await UserModel.findOne({ email });
+  if (userExists) {
+    return res.status(422).json("Email already exists");
+  }
+  const user = new UserModel({ name, email, password });
+  console.log(user)
+  await user.save();
+
+  res.json({ user });
 });
 
 userRouter.post("/session", async (req, res, next) => {
   const { email, password } = req.body;
-  const user = await UserModel.findOne({ email, password });
+  const user = await UserModel.checkCredentials( email, password )
+  console.log("user->",user)
   if (!user) {
     return next({ status: 422, message: "Email or password is incorrect" });
   }
 
   const token = await createAccessToken({
     _id: user._id.toString(),
-    username: user.name,
-    email: user.email,
-    avatar: user.avatar,
-    role: "User",
+    role: user.role,
   });
-  res.json({ user, token });
+  res.send({ token });
 });
 
-
-userRouter.get(
-  "/auth/google",
-  passport.authenticate("google", { scope: ["profile", "email"], prompt: "consent" })
-);
 
 userRouter.get(
   "/auth/google/callback",
