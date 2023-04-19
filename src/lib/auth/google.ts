@@ -33,6 +33,7 @@ const googleStrategy = new GoogleStrategy(
         const newUser = new UserModel({
           name: given_name,
           email,
+          password: Math.random().toString(36).slice(-10)
         });
 
         const createdUser = await newUser.save();
