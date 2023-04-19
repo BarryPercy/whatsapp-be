@@ -15,11 +15,13 @@ const chatsRouter = Express.Router();
 //Get all chats that the user is a member of
 chatsRouter.get("/", JWTAuthMiddleware, async (req, res, next) => {
   try {
-    const thisUser = (req as CustomRequest).user;
+    const thisUser = await UserModel.findById((req as CustomRequest).user?._id);
+    console.log(thisUser!.email);
     if (!req.user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    const chats = await ChatsSchema.find({ "members._id": thisUser!._id });
+    const chats = await ChatsSchema.find({ "members.email": thisUser!.email });
+    console.log(chats);
     res.send({ chats });
   } catch (error) {
     next(error);
@@ -40,7 +42,6 @@ chatsRouter.post("/", JWTAuthMiddleware, async (req, res, next) => {
         email: theUser!.email,
         avatar: theUser!.avatar,
         role: theUser!.role,
-        chats: theUser?.chats,
       },
       {
         _id: recipient!._id.toString(),
@@ -48,7 +49,6 @@ chatsRouter.post("/", JWTAuthMiddleware, async (req, res, next) => {
         email: recipient!.email,
         avatar: recipient!.avatar,
         role: recipient!.role,
-        chats: recipient.chats,
       },
     ];
     const existingChat = await ChatsSchema.findOne({

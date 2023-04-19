@@ -17,9 +17,6 @@ interface CustomRequest extends Request {
 }
 const userRouter = express.Router();
 
-
-
-
 userRouter.post("/account", async (req, res) => {
   const { name, email, password } = req.body;
   const userExists = await UserModel.findOne({ email });
@@ -27,7 +24,7 @@ userRouter.post("/account", async (req, res) => {
     return res.status(422).json("Email already exists");
   }
   const user = new UserModel({ name, email, password });
-  console.log(user)
+  console.log(user);
   await user.save();
 
   res.json({ user });
@@ -35,28 +32,36 @@ userRouter.post("/account", async (req, res) => {
 
 userRouter.post("/session", async (req, res, next) => {
   const { email, password } = req.body;
-  const user = await UserModel.checkCredentials( email, password )
-  console.log("user->",user)
+  const user = await UserModel.checkCredentials(email, password);
+  console.log("user->", user);
   if (!user) {
     return next({ status: 422, message: "Email or password is incorrect" });
   }
 
   const token = await createAccessToken({
     _id: user._id.toString(),
+    username: user.name,
+    email: user.email,
+    avatar: user.avatar,
     role: user.role,
   });
   res.send({ token });
 });
 
-
 userRouter.get(
   "/auth/google",
-  passport.authenticate("google", { scope: ["profile", "email"], prompt: "consent" })
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+    prompt: "consent",
+  })
 );
 
 userRouter.get(
   "/auth/google/callback",
-  passport.authenticate("google", { session: false, scope: ["profile", "email"] }),
+  passport.authenticate("google", {
+    session: false,
+    scope: ["profile", "email"],
+  }),
   async (req: any, res, next) => {
     try {
       res.redirect(
@@ -67,7 +72,6 @@ userRouter.get(
     }
   }
 );
-
 
 userRouter.get("/", async (req, res, next) => {
   try {
