@@ -14,27 +14,30 @@ import userRouter from "../src/api/users";
 import passport from "passport";
 import googleStrategy from "./lib/auth/google";
 import chatsRouter from "./api/messages/index";
+import { newConnectionHandler } from "./socket/index"
+import { ServerToClientEvents, ClientToServerEvents, InterServerEvents, SocketData } from "./interfaces";
 
-const server = Express();
+const expressServer = Express();
 
-const httpServer = createServer(server);
-const socketServer = new Server(httpServer);
+const httpServer = createServer(expressServer);
+const socketServer = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(httpServer);
+socketServer.on("connection", newConnectionHandler)
 
 passport.use("google", googleStrategy);
 passport.use("google", googleStrategy);
-server.use(cors());
-server.use(Express.json());
-server.use(passport.initialize());
+expressServer.use(cors());
+expressServer.use(Express.json());
+expressServer.use(passport.initialize());
 
-server.use("/users", userRouter);
-server.use("/chats", chatsRouter);
+expressServer.use("/users", userRouter);
+expressServer.use("/chats", chatsRouter);
 
-server.use(badRequestHandler);
-server.use(unauthorizedHandler);
-server.use(forbiddenHandler);
-server.use(notFoundHandler);
+expressServer.use(badRequestHandler);
+expressServer.use(unauthorizedHandler);
+expressServer.use(forbiddenHandler);
+expressServer.use(notFoundHandler);
 
-server.use(validationErrorHandler);
-server.use(genericErrorHandler);
+expressServer.use(validationErrorHandler);
+expressServer.use(genericErrorHandler);
 
-export { httpServer, server };
+export { httpServer, expressServer };
