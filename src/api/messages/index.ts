@@ -58,7 +58,7 @@ chatsRouter.post("/", JWTAuthMiddleware, async (req, res, next) => {
       ],
     });
     if (existingChat) {
-      const messages = await ChatsSchema.find({ chatId: existingChat._id });
+      //const messages = await ChatsSchema.find({ chatId: existingChat._id });
       return res
         .status(200)
         .send({ chatId: existingChat._id, messages: existingChat.messages });
