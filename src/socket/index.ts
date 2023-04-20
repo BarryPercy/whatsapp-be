@@ -9,6 +9,10 @@ export const newConnectionHandler =  (socket: Socket) => {
 //     userList.push({ username: payload.username, id:socket.id})
 //     console.log(userList)
 //   })
+//   socket.on("joinRoom", chatId => {
+//     socket.join(chatId);
+//     console.log(`Client with ID ${socket.id} joined room ${chatId}`);
+//   });
 //   socket.on("sendMessage", async (payload) =>{
 //     console.log("heres sender->",payload)
 //     const message = new MessagesModel({
@@ -19,6 +23,7 @@ export const newConnectionHandler =  (socket: Socket) => {
 //     })
 //     await message.save();
 //     console.log(message)
-//     socket.broadcast.emit("setHistory", userList)
+//     socket.to(payload.message.chatId).emit("newMessage", payload.message);
+  
 //   })
 }
