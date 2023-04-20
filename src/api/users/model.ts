@@ -20,7 +20,7 @@ const UserSchema = new Schema({
     name: { type: String, required: true },
     email: { type: String, required: true },
     password: { type: String, required: true },
-    avatar: { type: String, default: `<i class="bi bi-person-circle"></i>` },
+    avatar: { type: String, default: `http://placekitten.com/200/300` },
     status: { type: String },
     role: { type: String, enum: ["User", "Admin"], default: "User" },
     accessToken: { type: String },
@@ -44,6 +44,9 @@ UserSchema.methods.toJSON = function() {
 
     return currentUser
 }
+
+
+
 
 UserSchema.static("checkCredentials", async function (email, plainPW) {
     const user = await this.findOne({ email })
