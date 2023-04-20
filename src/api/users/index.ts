@@ -17,7 +17,7 @@ interface CustomRequest extends Request {
 }
 const userRouter = express.Router();
 
-userRouter.post("/account", async (req, res) => {
+userRouter.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
   const userExists = await UserModel.findOne({ email });
   if (userExists) {
@@ -30,7 +30,7 @@ userRouter.post("/account", async (req, res) => {
   res.json({ user });
 });
 
-userRouter.post("/session", async (req, res, next) => {
+userRouter.post("/login", async (req, res, next) => {
   const { email, password } = req.body;
   const user = await UserModel.checkCredentials(email, password);
   console.log("user->", user);
