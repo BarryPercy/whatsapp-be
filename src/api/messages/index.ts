@@ -28,6 +28,18 @@ chatsRouter.get("/", JWTAuthMiddleware, async (req, res, next) => {
   }
 });
 
+chatsRouter.post("/addMessage",JWTAuthMiddleware, async (req,res,next)=>{
+  try {
+    const chat = await ChatsSchema.findById(req.body.chatId)
+    if(!chat){
+      throw createHttpError(400, "can't find chat");
+    }
+    console.log("body object",req.body.message)
+    console.log("chat.messages",chat.messages)
+  } catch (error) {
+    console.log(error)
+  }
+})
 chatsRouter.post("/", JWTAuthMiddleware, async (req, res, next) => {
   try {
     const theUser = await UserModel.findById((req as CustomRequest).user?._id);
@@ -92,10 +104,7 @@ chatsRouter.get("/:id", JWTAuthMiddleware, async (req, res, next) => {
       },
     });
     if (chat) {
-      const messages = await MessagesSchema.find({
-        _id: chat._id,
-      });
-      res.send("+" + messages);
+      res.send(chat.messages);
     } else {
       next(createHttpError(404, "Chat does not exist or unauthorized."));
     }

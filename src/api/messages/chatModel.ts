@@ -15,12 +15,13 @@ const ChatsSchema = new Schema(
     ],
     messages: [
       {
-        timestamp: { type: Number },
         sender: { type: String },
         content: {
           text: { type: String },
           media: { type: String },
         },
+        createdAt: {type:Date},
+        updatedAt: {type:Date}
       },
     ],
   },
