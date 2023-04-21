@@ -1,44 +1,65 @@
 import { Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
-const UserSchema = new Schema({
+import { Model, Document } from "mongoose";
+
+export interface UserDocument extends Document {
+  name: string;
+  email: string;
+  password: string;
+  avatar?: string;
+  status?: string;
+  role: "User" | "Admin";
+  accessToken?: string;
+}
+
+interface UserModelInterface extends Model<UserDocument> {
+  checkCredentials(
+    email: string,
+    plainPW: string
+  ): Promise<UserDocument | null>;
+}
+
+const UserSchema = new Schema(
+  {
     name: { type: String, required: true },
     email: { type: String, required: true },
     password: { type: String, required: true },
-    avatar: { type: String, default: `<i class="bi bi-person-circle"></i>` },
+    avatar: {
+      type: String,
+      default: `https://www.maxpixel.net/static/photo/1x/Profile-Man-Symbol-Human-Communication-User-Home-42914.png `,
+    },
     status: { type: String },
     role: { type: String, enum: ["User", "Admin"], default: "User" },
     accessToken: { type: String },
-  }, {timestamps: true});
-  
-UserSchema.pre("save", async function() {
-    const newUserData = this
-    if (newUserData.isModified("password")) {
-        const plainPw = newUserData.password
-        const hash = await bcrypt.hash(plainPw, 16)
-        newUserData.password = hash
-    }
-})
+  },
+  { timestamps: true }
+);
 
-UserSchema.methods.toJSON = function() {
-    const currentUser = this.toObject()
-    delete currentUser.password
-    delete currentUser.createdAt
-    delete currentUser.updatedAt
-    delete currentUser.__v
+UserSchema.pre("save", async function () {
+  const newUserData = this;
+  if (newUserData.isModified("password")) {
+    const plainPw = newUserData.password;
+    const hash = await bcrypt.hash(plainPw, 16);
+    newUserData.password = hash;
+  }
+});
 
-    return currentUser
-}
+UserSchema.methods.toJSON = function () {
+  const currentUser = this.toObject();
+  delete currentUser.password;
+  delete currentUser.createdAt;
+  delete currentUser.updatedAt;
+  delete currentUser.__v;
 
-UserSchema.static("checkCredentials", async function(email, plainPw) {
-    const user = await this.findOne({email})
-    if (user) {
-        const match = await bcrypt.compare(plainPw, user.password)
-        if (match) {
-            return user
-        } else {
-            return null
-        }
+  return currentUser;
+};
 
+UserSchema.static("checkCredentials", async function (email, plainPW) {
+  const user = await this.findOne({ email });
+  if (user) {
+    const passwordMatch = await bcrypt.compare(plainPW, user.password);
+    if (passwordMatch) {
+      return user;
     } else {
       return null;
     }
@@ -46,7 +67,9 @@ UserSchema.static("checkCredentials", async function(email, plainPw) {
     return null;
   }
 });
-
-const UserModel = model("User", UserSchema);
+const UserModel: UserModelInterface = model<UserDocument, UserModelInterface>(
+  "User",
+  UserSchema
+);
 
 export default UserModel;

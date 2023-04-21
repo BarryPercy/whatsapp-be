@@ -9,59 +9,69 @@ import { v2 as cloudinary } from "cloudinary";
 import { JWTAuthMiddleware } from "../../lib/auth/jwt";
 import { TokenPayload } from "../../lib/auth/tools";
 
+export interface googleRequest {
+  accessToken: string;
+}
 interface CustomRequest extends Request {
   user?: TokenPayload;
 }
 const userRouter = express.Router();
 
-userRouter.get(
-  "/auth/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
-);
-
-userRouter.get(
-  "/auth/google/callback",
-  passport.authenticate("google", { session: false }),
-  (req: any, res, next) => {
-    try {
-      res.redirect(
-        `${process.env.FE_DEV_URL}?accessToken=${req.user.accessToken}`
-      );
-    } catch (error) {
-      next(error);
-    }
-  }
-);
-
-userRouter.post("/account", async (req, res) => {
+userRouter.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
   const userExists = await UserModel.findOne({ email });
   if (userExists) {
     return res.status(422).json("Email already exists");
   }
   const user = new UserModel({ name, email, password });
+  console.log(user);
   await user.save();
-  const token = await createAccessToken({
-    _id: user._id.toString(),
-    role: "User",
-  });
-  res.json({ user, token });
+
+  res.json({ user });
 });
 
-userRouter.post("/session", async (req, res, next) => {
+userRouter.post("/login", async (req, res, next) => {
   const { email, password } = req.body;
-  const user = await UserModel.findOne({ email, password });
+  const user = await UserModel.checkCredentials(email, password);
+  console.log("user->", user);
   if (!user) {
     return next({ status: 422, message: "Email or password is incorrect" });
   }
 
   const token = await createAccessToken({
     _id: user._id.toString(),
-    role: "User",
-
+    username: user.name,
+    email: user.email,
+    avatar: user.avatar,
+    role: user.role,
   });
-  res.json({ user, token });
+  res.send({ token });
 });
+
+userRouter.get(
+  "/auth/google",
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+    prompt: "consent",
+  })
+);
+
+userRouter.get(
+  "/auth/google/callback",
+  passport.authenticate("google", {
+    session: false,
+    scope: ["profile", "email"],
+  }),
+  async (req: any, res, next) => {
+    try {
+      res.redirect(
+        `${process.env.FE_DEV_URL}/main?accessToken=${req.user.accessToken}`
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 userRouter.get("/", async (req, res, next) => {
   try {
@@ -78,9 +88,7 @@ userRouter.get("/me", JWTAuthMiddleware, async (req, res, next) => {
     if (user) {
       res.send(user);
     } else {
-      res.send(
-        createHttpError(404, "Couldn't find user")
-      );
+      res.send(createHttpError(404, "Couldn't find user"));
     }
   } catch (error) {
     next(error);
@@ -102,7 +110,8 @@ userRouter.get("/:id", async (req, res, next) => {
 
 userRouter.put("/me", JWTAuthMiddleware, async (req, res, next) => {
   try {
-    const updatedUser = await UserModel.findByIdAndUpdate((req as CustomRequest).user!._id,
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      (req as CustomRequest).user!._id,
       req.body,
       { new: true, runValidators: true }
     );
@@ -112,17 +121,47 @@ userRouter.put("/me", JWTAuthMiddleware, async (req, res, next) => {
   }
 });
 
-{
-  const cloudinaryUploader = multer({
-    storage: new CloudinaryStorage({
-      cloudinary,
-      params: {
-        folder: "whatsapp/avatar",
-      } as any,
-    }),
-  }).single("avatar");
-}
+const cloudinaryUploader = multer({
+  storage: new CloudinaryStorage({
+    cloudinary,
+    params: {
+      folder: "whatsapp/avatar",
+    } as any,
+  }),
+}).single("avatar");
 
-//userRouter.post("/me/avatar", cloudinaryUploader, async)
+userRouter.post(
+  "/me/avatar",
+  JWTAuthMiddleware,
+  cloudinaryUploader,
+  async (req, res) => {
+    await UserModel.findByIdAndUpdate((req as CustomRequest).user!._id, {
+      avatar: req.file?.path,
+    });
+    res.send({ avatar: req.file?.path });
+  }
+);
+
+userRouter.delete("/session", JWTAuthMiddleware, async (req, res, next) => {
+  try {
+    await UserModel.findByIdAndUpdate((req as CustomRequest).user!._id, {
+      refreshToken: "",
+    });
+    res.send({ message: "Successfully logged out" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+{
+  /*userRouter.post("/session/refresh", JWTAuthMiddleware, async (req, res, next) => {
+  try {
+   
+    res.send();
+  } catch (error) {
+    next(error);
+  }
+});*/
+}
 
 export default userRouter;

@@ -4,25 +4,24 @@ const { Schema, model } = mongoose;
 
 const ChatsSchema = new Schema(
   {
-    _id: { type: String },
     members: [
       {
-        _id: { type: String },
-        username: { type: String },
+        name: { type: String },
         email: { type: String },
         status: { type: String },
         avatar: { type: String },
+        role: { type: String },
       },
     ],
     messages: [
       {
-        _id: { type: String },
-        timestamp: { type: Number },
         sender: { type: String },
         content: {
           text: { type: String },
           media: { type: String },
         },
+        createdAt: {type:Date},
+        updatedAt: {type:Date}
       },
     ],
   },
